@@ -40,6 +40,7 @@
               <th>Deduction</th>
               <th>Points</th>
               <th>Level</th>
+              <th>Action</th>
             </tr>
             <tr v-for="data in filteredPlayers" :key="data.id">
               <td>{{data.player_name}}</td>
@@ -47,6 +48,14 @@
               <td>{{data.deduction}}</td>
               <td>{{data.score}}</td>
               <td>{{(data.score >= 80)  ? 'Pro' : (data.score < 50) ? 'Beginner' : 'Intermediate'}}</td>
+              <td>
+                  <div class="d-flex gap-2 align-items-center justify-content-center">
+                                  
+                                    <div>
+                                        <button class="btn btn-warning" @click="deletePlayer(data.id)"> remove </button>
+                                    </div>
+                               </div>
+              </td>
             </tr>
             
           </table>
@@ -109,13 +118,15 @@ export default {
                 console.log(e)
             }
         },
-async fetchPlayerData() {
+        async fetchPlayerData() {
             try {
                 this.playersList = [];
             const q = collection(db, 'players'); 
             const querySnapshot = await getDocs(q);
 
             querySnapshot.forEach((doc) => {
+               const dateTimestamp = doc.data().date;
+
                 const playerData = {
                     id: doc.id,
                     player_name: doc.data().player_name,
@@ -127,17 +138,29 @@ async fetchPlayerData() {
                     : doc.data().points - doc.data().deduction < 50
                     ? 'Beginner'
                     : 'Intermediate',
-                    
+                    date: dateTimestamp
                 };
-
+               
                 console.log(playerData, 'playerData');
                 this.playersList.push(playerData);
                 
             });
+             this.playersList.sort((a, b) => a.date - b.date);
+
             // this.educations.sort((a, b) => b.date - a.date);
             }catch (e) {
                 console.error('Error fetching user data:', e);
             }
+      }, 
+       deletePlayer: async (id) => {
+         try {
+                await deleteDoc(doc(db, 'players', id));
+                window.alert('Player delete successfully!');
+                 window.location.reload();
+           } catch(e) {
+             console.log(e)
+           }
+           
       }
      }
 }
